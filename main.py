@@ -7,16 +7,9 @@ from tkinter import messagebox as mb
 from tkinter import simpledialog as sd
 from string import whitespace
 
-# Chemin du dossier dans lequelle le fichier se trouve, les \ sont remplacer par des /
-this_path = "/".join((os.path.abspath(os.path.split(__file__)[0]).split("\\")))
 
 # Liste des average à afficher
 AO_LIST = [5, 12, 50, 100, 500, 1000]
-ao_label_list = []
-
-start = 0
-run = False
-final_time = 0
 
 
 def scramble():
@@ -129,149 +122,219 @@ def mean():
         return "0:0.0"
 
 
-# Demander à créer une nouvel session
-create_session = mb.askquestion(
-    "Nouvel session ?", "Voulez vous choisir une session(oui) ou en créer une (non)"
-)
-
-if create_session == "no":
+def new_session():
+    global session_name
     session_name = (
         this_path
         + "/Sessions/"
         + sd.askstring("Nom de session", "Entrez un nom de session :")
     )
-elif create_session == "yes":
+
+
+def open_session():
+    global session_name
     session_name = fd.askdirectory(initialdir=this_path)
 
-# Création de la fenêtre
-root = tk.Tk()
-root.config(background="#ccccff")
-root.geometry("1200x500")
+
+def new_session_button_activate():
+    global bool_continue
+    bool_continue = True
+    new_session()
+    with open(this_path + "/info.txt", "w") as info_file:
+        info_file.write(session_name)
+    root.destroy()
 
 
-if not os.path.exists(session_name):
-    os.makedirs(session_name)
-    open(session_name + "/times.txt", "x").close()
+def open_session_button_activate():
+    global bool_continue
+    bool_continue = True
+    open_session()
+    with open(this_path + "/info.txt", "w") as info_file:
+        info_file.write(session_name)
+    root.destroy()
 
-# Frame pour les average
-ao_frame = tk.Frame(root, background="#270083")
-ao_frame.pack(side="right")
 
-# Label de melange
-scramble_label = tk.Label(
-    root, text=str(scramble()), font=("Comic", 25), bg=root["bg"], fg="#4E4E4E"
-)
-scramble_label.pack(side="top")
+while True:
+    ao_label_list = []
 
-# Faire afficher tout les ao de la liste
-for ao in AO_LIST:
-    ao_label_list.append(
-        tk.Label(
-            ao_frame,
-            text="ao" + str(ao) + " = " + str(aoN(ao)),
-            font=("Helvetica", 20),
-            bg=ao_frame["bg"],
-            fg="white",
+    start = 0
+    run = False
+    final_time = 0
+
+    # Chemin du dossier dans lequelle le fichier se trouve, les \ sont remplacer par des /
+    this_path = "/".join((os.path.abspath(os.path.split(__file__)[0]).split("\\")))
+
+    if not os.path.exists(this_path + "/info.txt"):
+        open(this_path + "/info.txt", "x").close()
+
+    with open(this_path + "/info.txt", "r") as info_file:
+        session_path = info_file.readline()
+        if session_path in whitespace:
+            session_path = None
+
+    # Demander à créer une nouvel session
+    if session_path == None:
+        miniroot = tk.Tk()
+        miniroot.withdraw()
+        create_session = mb.askquestion(
+            "Nouvel session ?",
+            "Voulez vous choisir une session(oui) ou en créer une (non)",
         )
-    )
-    ao_label_list[-1].pack()
 
-# Le chrono
-chrono = tk.Label(root, text="0.00", font=("Helvetica", 35), bg=root["bg"], fg="black")
-chrono.pack(pady=100)
-
-# Infos de la session en bas à gauche
-infos_session = tk.Frame(root, background=root["bg"])
-infos_session.pack(side="left", padx=100)
-
-nb_solve = tk.Label(
-    infos_session,
-    background=infos_session["bg"],
-    text="Vous avez fait "
-    + str(
-        len(
-            list(
-                filter(
-                    lambda x: not x in whitespace,
-                    open(session_name + "/times.txt", "r").read().split("\n"),
-                )
-            )
-        )
-    )
-    + " solve(s)",
-    font=("Helvetica", 25),
-)
-nb_solve.pack()
-
-pb_label = tk.Label(
-    infos_session,
-    background=infos_session["bg"],
-    text="Pb : " + pb(),
-    font=("Helvetica", 25),
-)
-pb_label.pack()
-
-mean_label = tk.Label(
-    infos_session,
-    background=infos_session["bg"],
-    text="Moyenne : " + mean(),
-    font=("Helvetica", 25),
-)
-mean_label.pack()
-
-
-def update():
-    if run:
-        update_chrono()
-    root.after(10, update)
-
-
-def go(*useless):
-    global run, start
-    if run:
-        write_time()
-        scramble_label["text"] = str(scramble())
-        run = False
-        nb_solve["text"] = (
-            "Vous avez fait "
-            + str(
-                len(
-                    list(
-                        filter(
-                            lambda x: not x in whitespace,
-                            open(session_name + "/times.txt", "r").read().split("\n"),
-                        )
-                    )
-                )
-            )
-            + " solve(s)"
-        )
-        pb_label["text"] = "Pb : " + pb()
-        mean_label["text"] = "Moyenne : " + mean()
-        update_ao()
+        if create_session == "no":
+            new_session()
+        elif create_session == "yes":
+            open_session()
+        miniroot.destroy()
     else:
-        nb_solve["text"] = (
-            "Vous avez fait "
-            + str(
-                len(
-                    list(
-                        filter(
-                            lambda x: not x in whitespace,
-                            open(session_name + "/times.txt", "r").read().split("\n"),
-                        )
+        session_name = session_path
+
+    with open(this_path + "/info.txt", "w") as info_file:
+        info_file.write(session_name)
+
+    # Création de la fenêtre
+    root = tk.Tk()
+    root.config(background="#ccccff")
+    root.geometry("1200x500")
+
+    new_session_button = tk.Button(
+        root, text="Nouvel Session", command=new_session_button_activate
+    )
+    open_session_button = tk.Button(
+        root, text="Ouvrir une session", command=open_session_button_activate
+    )
+    new_session_button.pack()
+    open_session_button.pack()
+
+    if not os.path.exists(session_name):
+        os.makedirs(session_name)
+        open(session_name + "/times.txt", "x").close()
+
+    # Frame pour les average
+    ao_frame = tk.Frame(root, background="#270083")
+    ao_frame.pack(side="right")
+
+    # Label de melange
+    scramble_label = tk.Label(
+        root, text=str(scramble()), font=("Comic", 25), bg=root["bg"], fg="#4E4E4E"
+    )
+    scramble_label.pack(side="top")
+
+    # Faire afficher tout les ao de la liste
+    for ao in AO_LIST:
+        ao_label_list.append(
+            tk.Label(
+                ao_frame,
+                text="ao" + str(ao) + " = " + str(aoN(ao)),
+                font=("Helvetica", 20),
+                bg=ao_frame["bg"],
+                fg="white",
+            )
+        )
+        ao_label_list[-1].pack()
+
+    infos_session = tk.Frame(root, background=root["bg"])
+    infos_session.pack(side="left")
+
+    # Le chrono
+    chrono = tk.Label(root, text="0.00", font=("Helvetica", 60), bg="grey", fg="black")
+    chrono.pack(pady=100)
+
+    nb_solve = tk.Label(
+        infos_session,
+        background=infos_session["bg"],
+        text="Vous avez fait "
+        + str(
+            len(
+                list(
+                    filter(
+                        lambda x: not x in whitespace,
+                        open(session_name + "/times.txt", "r").read().split("\n"),
                     )
                 )
             )
-            + " solve(s)"
         )
-        pb_label["text"] = "Pb : " + pb()
-        mean_label["text"] = "Moyenne : " + mean()
-        run = True
-        start = dt.datetime.now()
+        + " solve(s)",
+        font=("Helvetica", 25),
+    )
+    nb_solve.pack()
 
+    pb_label = tk.Label(
+        infos_session,
+        background=infos_session["bg"],
+        text="Pb : " + pb(),
+        font=("Helvetica", 25),
+    )
+    pb_label.pack()
 
-update()
-update_ao()
-root.bind("<KeyRelease-space>", go)
+    mean_label = tk.Label(
+        infos_session,
+        background=infos_session["bg"],
+        text="Moyenne : " + mean(),
+        font=("Helvetica", 25),
+    )
+    mean_label.pack()
 
-root.mainloop()
+    def update():
+        if run:
+            update_chrono()
+        root.after(10, update)
+
+    def go(*useless):
+        global run, start
+        if run:
+            write_time()
+            scramble_label["text"] = str(scramble())
+            run = False
+            nb_solve["text"] = (
+                "Vous avez fait "
+                + str(
+                    len(
+                        list(
+                            filter(
+                                lambda x: not x in whitespace,
+                                open(session_name + "/times.txt", "r")
+                                .read()
+                                .split("\n"),
+                            )
+                        )
+                    )
+                )
+                + " solve(s)"
+            )
+            pb_label["text"] = "Pb : " + pb()
+            mean_label["text"] = "Moyenne : " + mean()
+            update_ao()
+        else:
+            nb_solve["text"] = (
+                "Vous avez fait "
+                + str(
+                    len(
+                        list(
+                            filter(
+                                lambda x: not x in whitespace,
+                                open(session_name + "/times.txt", "r")
+                                .read()
+                                .split("\n"),
+                            )
+                        )
+                    )
+                )
+                + " solve(s)"
+            )
+            pb_label["text"] = "Pb : " + pb()
+            mean_label["text"] = "Moyenne : " + mean()
+            run = True
+            start = dt.datetime.now()
+
+    update()
+    update_ao()
+    root.bind("<KeyRelease-space>", go)
+
+    root.mainloop()
+    try:
+        if not bool_continue:
+            break
+    except:
+        break
+    bool_continue = False
