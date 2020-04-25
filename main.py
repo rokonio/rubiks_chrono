@@ -8,7 +8,7 @@ from tkinter import simpledialog as sd
 from string import whitespace
 
 # Chemin du dossier dans lequelle le fichier se trouve, les \ sont remplacer par des /
-this_path = "/".join((os.getcwd().split("\\")))
+this_path = "/".join((os.path.abspath(os.path.split(__file__)[0]).split("\\")))
 
 # Liste des average à afficher
 AO_LIST = [5, 12, 50, 100, 500, 1000]
@@ -27,7 +27,7 @@ def scramble():
         while i > 0 and b == d:
             b = random.choice(moves)
         d = b
-        total += b + random.choice(["'", "2", " "]) + " "
+        total += b + random.choice(["'", "2", ""]) + " "
     return total
 
 
@@ -129,11 +129,6 @@ def mean():
         return "0:0.0"
 
 
-# Création de la fenêtre
-root = tk.Tk()
-root.config(background="#ccccff")
-root.geometry("1200x500")
-
 # Demander à créer une nouvel session
 create_session = mb.askquestion(
     "Nouvel session ?", "Voulez vous choisir une session(oui) ou en créer une (non)"
@@ -146,7 +141,13 @@ if create_session == "no":
         + sd.askstring("Nom de session", "Entrez un nom de session :")
     )
 elif create_session == "yes":
-    session_name = fd.askdirectory(initialdir=os.getcwd())
+    session_name = fd.askdirectory(initialdir=this_path)
+
+# Création de la fenêtre
+root = tk.Tk()
+root.config(background="#ccccff")
+root.geometry("1200x500")
+
 
 if not os.path.exists(session_name):
     os.makedirs(session_name)
