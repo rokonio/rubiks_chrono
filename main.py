@@ -5,6 +5,7 @@ import tkinter as tk
 from tkinter import filedialog as fd
 from tkinter import messagebox as mb
 from tkinter import simpledialog as sd
+from string import whitespace
 
 # Chemin du dossier dans lequelle le fichier se trouve, les \ sont remplacer par des /
 this_path = "/".join((os.getcwd().split("\\")))
@@ -17,6 +18,7 @@ start = 0
 run = False
 final_time = 0
 
+
 def scramble():
     total = ""
     moves = ["R", "L", "F", "B", "U", "D"]
@@ -28,13 +30,14 @@ def scramble():
         total += b + random.choice(["'", "2", " "]) + " "
     return total
 
+
 # Récupere l'average des nb dernier temps
 def aoN(nb):
     total = []
     count = 0
     with open(session_name + "/times.txt", "r") as f:
         for line in reversed(f.read().split("\n")):
-            if line != "" and count < nb:
+            if not (line in whitespace) and count < nb:
                 count += 1
                 total.append(float(line.split(":")[1]) + float(line.split(":")[0]) * 60)
     try:
@@ -47,7 +50,17 @@ def aoN(nb):
 def update_ao():
     for ao in range(len(AO_LIST)):
         ao_actual = aoN(AO_LIST[ao])
-        if len(open(session_name + "/times.txt", "r").readlines()) >= AO_LIST[ao]:
+        if (
+            len(
+                list(
+                    filter(
+                        lambda x: not x in whitespace,
+                        open(session_name + "/times.txt", "r").read().split("\n"),
+                    )
+                )
+            )
+            >= AO_LIST[ao]
+        ):
             ao_label_list[ao]["text"] = (
                 "ao"
                 + str(AO_LIST[ao])
@@ -89,7 +102,7 @@ def pb():
     times = []
     with open(session_name + "/times.txt", "r") as f:
         for line in f.read().split("\n"):
-            if line != "":
+            if not line in whitespace:
                 times.append(float(line.split(":")[1]) + int(line.split(":")[0]))
     try:
         return str(int(min(times) // 60)) + ":" + str(min(times) % 60)
@@ -103,7 +116,7 @@ def mean():
     ratio = 0
     with open(session_name + "/times.txt", "r") as f:
         for line in f.read().split("\n"):
-            if line != "":
+            if not line in whitespace:
                 times.append(float(line.split(":")[1]) + int(line.split(":")[0]))
                 ratio += 1
     try:
@@ -132,12 +145,12 @@ if create_session == "no":
         + "/Sessions/"
         + sd.askstring("Nom de session", "Entrez un nom de session :")
     )
-elif create_session == "yes" :
+elif create_session == "yes":
     session_name = fd.askdirectory(initialdir=os.getcwd())
 
 if not os.path.exists(session_name):
-        os.makedirs(session_name)
-        open(session_name + "/times.txt", "x").close()
+    os.makedirs(session_name)
+    open(session_name + "/times.txt", "x").close()
 
 # Frame pour les average
 ao_frame = tk.Frame(root, background="#270083")
@@ -174,7 +187,16 @@ nb_solve = tk.Label(
     infos_session,
     background=infos_session["bg"],
     text="Vous avez fait "
-    + str(len(open(session_name + "/times.txt", "r").read().split("\n")) - 1)
+    + str(
+        len(
+            list(
+                filter(
+                    lambda x: not x in whitespace,
+                    open(session_name + "/times.txt", "r").read().split("\n"),
+                )
+            )
+        )
+    )
     + " solve(s)",
     font=("Helvetica", 25),
 )
@@ -191,7 +213,7 @@ pb_label.pack()
 mean_label = tk.Label(
     infos_session,
     background=infos_session["bg"],
-    text="moyenne" + mean(),
+    text="Moyenne : " + mean(),
     font=("Helvetica", 25),
 )
 mean_label.pack()
@@ -211,7 +233,16 @@ def go(*useless):
         run = False
         nb_solve["text"] = (
             "Vous avez fait "
-            + str(len(open(session_name + "/times.txt", "r").read().split("\n")) - 1)
+            + str(
+                len(
+                    list(
+                        filter(
+                            lambda x: not x in whitespace,
+                            open(session_name + "/times.txt", "r").read().split("\n"),
+                        )
+                    )
+                )
+            )
             + " solve(s)"
         )
         pb_label["text"] = "Pb : " + pb()
@@ -220,7 +251,16 @@ def go(*useless):
     else:
         nb_solve["text"] = (
             "Vous avez fait "
-            + str(len(open(session_name + "/times.txt", "r").read().split("\n")) - 1)
+            + str(
+                len(
+                    list(
+                        filter(
+                            lambda x: not x in whitespace,
+                            open(session_name + "/times.txt", "r").read().split("\n"),
+                        )
+                    )
+                )
+            )
             + " solve(s)"
         )
         pb_label["text"] = "Pb : " + pb()
